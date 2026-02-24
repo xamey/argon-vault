@@ -1,6 +1,6 @@
 {
   "name": "argon-vault",
-  "version": "1.2.0",
+  "version": "1.3.0",
   "description": "argon-vault: Secret Encryption CLI Tool",
   "type": "module",
   "main": "src/index.js",
@@ -32,6 +32,10 @@
   },
   "exports": {
     ".": "./src/index.js",
-    "./crypto-browser": "./src/crypto-browser.js"
+    "./crypto-browser": {
+      "import": "./crypto-browser.js",
+      "require": "./crypto-browser.js",
+      "default": "./crypto-browser.js"
+    }
   }
 }
