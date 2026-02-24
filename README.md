@@ -46,6 +46,6 @@ import { decryptA } from "./secrets.js";
 const value = await decryptA(passphrase);
 ```
 
-Your app must depend on this package and have `argon2-browser` available (it’s a dependency of argon-vault). The subpath `argon-vault/crypto-browser` exports `deriveKeyBrowser` and `decryptValueBrowser` if you need to decrypt a raw payload (e.g. from a fetched `secrets.json`) yourself.
+Your app must depend on this package and have `argon2-browser` available (it’s a dependency of argon-vault). The subpath `argon-vault/crypto-browser` exports `deriveKeyBrowser` and `decryptValueBrowser` if you need to decrypt a raw payload (e.g. from a fetched `secrets.json`) yourself. This package uses argon2-browser’s bundled build so **Vite works without any Wasm plugins**.
 
 **Crypto:** Argon2id (memory 256×1024 KiB, time 12, parallelism 1, hash 32 bytes) and AES-256-GCM (12-byte IV, 16-byte auth tag), compatible with existing `secrets.json` payloads.

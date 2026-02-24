@@ -1,6 +1,8 @@
 /**
  * Browser-safe crypto: same KDF and cipher as src/crypto.js so existing
  * secrets.json payloads decrypt. Uses argon2-browser + Web Crypto (AES-GCM).
+ * Uses the bundled build (argon2-bundled.min.js) so Vite and other bundlers
+ * work without vite-plugin-wasm.
  *
  * Argon2id: memory 256*1024 KiB, time 12, parallelism 1, hash 32 bytes.
  * AES-256-GCM: 12-byte IV, 16-byte auth tag (ciphertext + tag).
@@ -29,7 +31,7 @@ function base64ToUint8Array(base64) {
  * @returns {Promise<Uint8Array>} 32-byte key
  */
 export async function deriveKeyBrowser(passphrase, salt) {
-  const mod = await import("argon2-browser");
+  const mod = await import("argon2-browser/dist/argon2-bundled.min.js");
   const argon2 = mod.default ?? mod;
   const result = await argon2.hash({
     pass: passphrase,
@@ -55,7 +57,7 @@ export async function decryptValueBrowser(
   encryptedDataBase64,
   key,
   ivBase64,
-  authTagBase64
+  authTagBase64,
 ) {
   const iv = base64ToUint8Array(ivBase64);
   const ciphertext = base64ToUint8Array(encryptedDataBase64);
@@ -69,7 +71,7 @@ export async function decryptValueBrowser(
     key,
     { name: "AES-GCM" },
     false,
-    ["decrypt"]
+    ["decrypt"],
   );
 
   const decrypted = await crypto.subtle.decrypt(
@@ -79,7 +81,7 @@ export async function decryptValueBrowser(
       tagLength: AES_GCM_TAG_LENGTH_BITS,
     },
     cryptoKey,
-    ciphertextWithTag
+    ciphertextWithTag,
   );
 
   return new TextDecoder("utf-8").decode(decrypted);
