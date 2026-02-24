@@ -1,0 +1,32 @@
+{
+  "name": "argon-vault",
+  "version": "1.0.0",
+  "description": "argon-vault: Secret Encryption CLI Tool",
+  "type": "module",
+  "main": "src/index.js",
+  "bin": {
+    "argon-vault": "src/index.js"
+  },
+  "scripts": {
+    "start": "node src/index.js",
+    "lint": "eslint src/",
+    "format": "prettier --write src/"
+  },
+  "keywords": [
+    "cli",
+    "encryption",
+    "secrets",
+    "argon2",
+    "aes"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "argon2": "^0.41.1",
+    "commander": "^12.1.0"
+  },
+  "devDependencies": {
+    "eslint": "^9.0.0",
+    "prettier": "^3.3.0"
+  }
+}
