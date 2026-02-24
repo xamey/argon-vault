@@ -1,6 +1,6 @@
 {
   "name": "argon-vault",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "argon-vault: Secret Encryption CLI Tool",
   "type": "module",
   "main": "src/index.js",
