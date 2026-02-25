@@ -65,3 +65,7 @@ When you run `argon-vault` to create or update your vault, it automatically adds
 You can rely on `deriveKey` throwing to decide whether a user‑provided passphrase is correct, and then reuse the returned key for all other decrypt functions.
 
 **Crypto:** Argon2id (memory 256×1024 KiB, time 12, parallelism 1, hash 32 bytes) and AES-256-GCM (12-byte IV, 16-byte auth tag), compatible with existing `secrets.json` payloads.
+
+## License
+
+This project is licensed under the MIT License - see the LICENSE file for details.
