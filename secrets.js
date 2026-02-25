@@ -1,13 +1,22 @@
 import { deriveKeyBrowser, decryptValueBrowser } from 'argon-vault/crypto-browser';
 
-const vaultSalt = Uint8Array.from(atob('TBN/aygdv5yEZzbWikmC6Q=='), c => c.charCodeAt(0));
-
-export async function decryptA(passphrase) {
+export async function deriveKey(passphrase) {
+  const vaultSalt = Uint8Array.from(atob("n09gEeG/mewUevnWdkXqFg=="), (c) =>
+    c.charCodeAt(0),
+  );
   const key = await deriveKeyBrowser(passphrase, vaultSalt);
-  return decryptValueBrowser('Gw==', key, '4Zupkx5jQMLQF6nU', '3BipnaQG9AIK6pfjZHhLMw==');
+  try {
+    await decrypt_sentinel(key);
+  } catch (e) {
+    throw new Error("Invalid passphrase");
+  }
+  return key;
 }
 
-export async function decryptC(passphrase) {
-  const key = await deriveKeyBrowser(passphrase, vaultSalt);
-  return decryptValueBrowser('rA==', key, 'HulOafn8bDO0VxVs', '8noJ0W4tCIV0y8gwdq/D4g==');
+export async function decryptC(key) {
+  return decryptValueBrowser('gQ==', key, 'nnkgnZ/Rhinh7gHK', 'iAKNKHc+fw/iQCqwx4qVmA==');
+}
+
+export async function decrypt_sentinel(key) {
+  return decryptValueBrowser('Ss8=', key, 'vtFxZCm7d+o4o9gU', 'rY4AanrhS2Ls8WX7b2+HYA==');
 }

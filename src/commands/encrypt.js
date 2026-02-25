@@ -162,6 +162,11 @@ export async function encrypt() {
       break;
     }
 
+    if (key === "_sentinel") {
+      console.log('Error: "_sentinel" is a reserved key name');
+      continue;
+    }
+
     if (secrets[key]) {
       console.log("Error: Key already exists");
       continue;
@@ -191,6 +196,19 @@ export async function encrypt() {
     process.exit(0);
   }
 
+  // Add a sentinel secret used to verify passphrases in the browser.
+  // This is not meant for application use; it only exists so the
+  // generated deriveKey function can detect wrong passphrases by
+  // attempting a decryption.
+  if (!secrets._sentinel) {
+    const sentinel = encryptValue("OK", masterKey);
+    secrets._sentinel = {
+      iv: sentinel.iv,
+      authTag: sentinel.authTag,
+      data: sentinel.data,
+    };
+  }
+
   const output = {
     version: 2,
     salt: vaultSalt.toString("base64"),
@@ -209,12 +227,33 @@ export async function encrypt() {
 
 function generateDecryptionModule(vaultSalt, secrets) {
   const saltBase64 = vaultSalt.toString("base64");
+  const sentinel = secrets["_sentinel"];
+
+  const deriveKeyFunction = sentinel
+    ? `export async function deriveKey(passphrase) {
+  const vaultSalt = Uint8Array.from(atob("${saltBase64}"), (c) =>
+    c.charCodeAt(0),
+  );
+  const key = await deriveKeyBrowser(passphrase, vaultSalt);
+  try {
+    await decrypt_sentinel(key);
+  } catch (e) {
+    throw new Error("Invalid passphrase");
+  }
+  return key;
+}`
+    : `export async function deriveKey(passphrase) {
+  const vaultSalt = Uint8Array.from(atob("${saltBase64}"), (c) =>
+    c.charCodeAt(0),
+  );
+  return deriveKeyBrowser(passphrase, vaultSalt);
+}`;
+
   const functions = Object.keys(secrets)
     .map((key) => {
       const secret = secrets[key];
       const funcName = `decrypt${key.charAt(0).toUpperCase() + key.slice(1).replace(/[^a-zA-Z0-9]/g, "_")}`;
-      return `export async function ${funcName}(passphrase) {
-  const key = await deriveKeyBrowser(passphrase, vaultSalt);
+      return `export async function ${funcName}(key) {
   return decryptValueBrowser('${secret.data}', key, '${secret.iv}', '${secret.authTag}');
 }`;
     })
@@ -222,7 +261,7 @@ function generateDecryptionModule(vaultSalt, secrets) {
 
   const jsContent = `import { deriveKeyBrowser, decryptValueBrowser } from 'argon-vault/crypto-browser';
 
-const vaultSalt = Uint8Array.from(atob('${saltBase64}'), c => c.charCodeAt(0));
+${deriveKeyFunction}
 
 ${functions}
 `;
