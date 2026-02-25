@@ -1,7 +1,13 @@
 import { deriveKeyBrowser, decryptValueBrowser } from 'argon-vault/crypto-browser';
 
+const vaultSalt = Uint8Array.from(atob('TBN/aygdv5yEZzbWikmC6Q=='), c => c.charCodeAt(0));
+
 export async function decryptA(passphrase) {
-  const salt = Uint8Array.from(atob('TrkQD0dx35PgzrpOcHWohQ=='), c => c.charCodeAt(0));
-  const key = await deriveKeyBrowser(passphrase, salt);
-  return decryptValueBrowser('FQ==', key, 'Iy+si3MVRMHfctfA', 'fr5S3oeLRAG/fG5bU0SnSA==');
+  const key = await deriveKeyBrowser(passphrase, vaultSalt);
+  return decryptValueBrowser('Gw==', key, '4Zupkx5jQMLQF6nU', '3BipnaQG9AIK6pfjZHhLMw==');
+}
+
+export async function decryptC(passphrase) {
+  const key = await deriveKeyBrowser(passphrase, vaultSalt);
+  return decryptValueBrowser('rA==', key, 'HulOafn8bDO0VxVs', '8noJ0W4tCIV0y8gwdq/D4g==');
 }

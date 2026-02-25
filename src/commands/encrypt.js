@@ -147,6 +147,9 @@ export async function encrypt() {
     process.exit(1);
   }
 
+  const vaultSalt = generateSalt();
+  const masterKey = await deriveKey(passphrase, vaultSalt);
+
   console.log(
     "\nEnter key/value pairs (press Enter twice on key to finish):\n",
   );
@@ -170,12 +173,9 @@ export async function encrypt() {
       continue;
     }
 
-    const salt = generateSalt();
-    const keyBuffer = await deriveKey(passphrase, salt);
-    const encrypted = encryptValue(value, keyBuffer);
+    const encrypted = encryptValue(value, masterKey);
 
     secrets[key] = {
-      salt: salt.toString("base64"),
       iv: encrypted.iv,
       authTag: encrypted.authTag,
       data: encrypted.data,
@@ -192,7 +192,8 @@ export async function encrypt() {
   }
 
   const output = {
-    version: 1,
+    version: 2,
+    salt: vaultSalt.toString("base64"),
     secrets: secrets,
   };
 
@@ -203,23 +204,25 @@ export async function encrypt() {
     `\nEncrypted ${Object.keys(secrets).length} secret(s) to ${outputPath}`,
   );
 
-  generateDecryptionModule(secrets);
+  generateDecryptionModule(vaultSalt, secrets);
 }
 
-function generateDecryptionModule(secrets) {
+function generateDecryptionModule(vaultSalt, secrets) {
+  const saltBase64 = vaultSalt.toString("base64");
   const functions = Object.keys(secrets)
     .map((key) => {
       const secret = secrets[key];
       const funcName = `decrypt${key.charAt(0).toUpperCase() + key.slice(1).replace(/[^a-zA-Z0-9]/g, "_")}`;
       return `export async function ${funcName}(passphrase) {
-  const salt = Uint8Array.from(atob('${secret.salt}'), c => c.charCodeAt(0));
-  const key = await deriveKeyBrowser(passphrase, salt);
+  const key = await deriveKeyBrowser(passphrase, vaultSalt);
   return decryptValueBrowser('${secret.data}', key, '${secret.iv}', '${secret.authTag}');
 }`;
     })
     .join("\n\n");
 
   const jsContent = `import { deriveKeyBrowser, decryptValueBrowser } from 'argon-vault/crypto-browser';
+
+const vaultSalt = Uint8Array.from(atob('${saltBase64}'), c => c.charCodeAt(0));
 
 ${functions}
 `;

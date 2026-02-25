@@ -39,18 +39,25 @@ export async function decrypt(options) {
     return;
   }
 
+  if (!secretsData.salt) {
+    console.error("Error: Missing vault salt in secrets file");
+    process.exit(1);
+  }
+
   const passphrase = await question("Enter passphrase: ");
   if (!passphrase) {
     console.error("Error: Passphrase cannot be empty");
     process.exit(1);
   }
 
+  console.log("Decrypting secrets...");
+  const vaultSalt = Buffer.from(secretsData.salt, "base64");
+  const keyBuffer = await deriveKey(passphrase, vaultSalt);
+
   console.log("\nDecrypted secrets:\n");
 
   for (const [key, secret] of Object.entries(secretsData.secrets)) {
     try {
-      const salt = Buffer.from(secret.salt, "base64");
-      const keyBuffer = await deriveKey(passphrase, salt);
       const decrypted = await decryptValue(
         secret.data,
         keyBuffer,
